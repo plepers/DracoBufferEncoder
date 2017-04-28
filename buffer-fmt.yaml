@@ -17,8 +17,10 @@ seq:
     type: u1
     repeat: expr
     repeat-expr: padding
+  - id: datasize
+    type: u4
   - id: data
-    size-eos: true
+    size: datasize
 
 types:
   

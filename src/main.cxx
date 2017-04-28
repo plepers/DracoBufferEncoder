@@ -128,9 +128,9 @@ int main(int argc, char** argv)
         TCLAP::CmdLine cmd("draco buffer encoder", ' ', DracoBufferEncoder_VERSION_STR);
 
         
-        TCLAP::UnlabeledValueArg<std::string> inputArg( "input", "file's path to convert", true, "", "input" );
+        TCLAP::ValueArg<std::string> inputArg( "i", "input", "file's path to convert (stdin if not set)", false, "", "input"  );
         
-        TCLAP::ValueArg<std::string> outputArg("o","output","output file's path", false, "", "output");
+        TCLAP::ValueArg<std::string> outputArg("o", "output","output file's path (stdout if not set)"   , false, "", "output" );
         
         
         TCLAP::ValueArg<uint> pos_quantization_bits       ("p","qp","quantization bits for the position, default 14",           false, 14, "pos");
@@ -166,15 +166,6 @@ int main(int argc, char** argv)
     
     
     
-    
-    
-    
-    std::ifstream file(options.input, std::ios::binary);
-    if (!file)
-        return false;
-    
-    
-    
     std::vector<std::string> aPositions;
     aPositions.push_back("aPosition");
     
@@ -192,17 +183,34 @@ int main(int argc, char** argv)
     
     
     
-    kaitai::kstream stream(&file);
-    awdbuf_t bufferStruct( &stream );
+
+    kaitai::kstream* stream;
+    awdbuf_t *bufferStruct;
+    
+    if( options.input.empty() ){
+        //std:: string strIN;
+        //std::cin >> strIN;
+        //printf("input stdin %s\n", strIN.c_str()  );
+        
+        stream = new kaitai::kstream(&std::cin);
+        bufferStruct = new awdbuf_t( stream );
+    } else {
+        printf("input file \n");
+        std::ifstream file(options.input, std::ios::binary);
+        stream = new kaitai::kstream(&file);
+        bufferStruct = new awdbuf_t( stream );
+    }
+    
+    
+
     
     
     
-    
-    printf("data size %lu \n", bufferStruct.data().size() );
-    
+    printf("data size %lu \n", bufferStruct->data().size() );
     
     
-    std::vector<awdbuf_t::attribute_t*> attribs = *bufferStruct.attributes();
+    
+    std::vector<awdbuf_t::attribute_t*> attribs = *bufferStruct->attributes();
     
     int stride = 0;
     for (int i=0; i < attribs.size(); i++) {
@@ -213,7 +221,7 @@ int main(int argc, char** argv)
         //attrib->name()
     }
     
-    uint numverts = bufferStruct.data().size()/stride;
+    uint numverts = bufferStruct->data().size()/stride;
     
     
     printf("num verts %i \n", numverts );
@@ -224,7 +232,7 @@ int main(int argc, char** argv)
     // Initialize the builder for a given number of points (required).
     builder.Start(numverts);
     
-    char* vdata = &bufferStruct.data()[0];
+    char* vdata = &bufferStruct->data()[0];
     
     
     
@@ -272,7 +280,7 @@ int main(int argc, char** argv)
         int att_id =
             builder.AddAttribute(type, numComps, draco::DT_FLOAT32);
         
-        builder.SetAttributeValuesForAllPoints( att_id, &vdata[offset+4], stride );
+        builder.SetAttributeValuesForAllPoints( att_id, &vdata[offset], stride );
         
         if( quantization_bits > 0 )
             encoder_options.GetAttributeOptions( att_id )->SetInt("quantization_bits", quantization_bits);

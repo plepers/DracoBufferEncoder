@@ -1,4 +1,3 @@
-
 // ================ SOURCE
 
 // This is a generated file! Please edit source .ksy file and use kaitai-struct-compiler to rebuild
@@ -25,7 +24,8 @@ awdbuf_t::awdbuf_t(kaitai::kstream *p_io, kaitai::kstruct *p_parent, awdbuf_t *p
     for (int i = 0; i < l_padbytes; i++) {
         m_padbytes->push_back(m__io->read_u1());
     }
-    m_data = m__io->read_bytes_full();
+    m_datasize = m__io->read_u4le();
+    m_data = m__io->read_bytes(datasize());
 }
 
 awdbuf_t::~awdbuf_t() {

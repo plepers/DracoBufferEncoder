@@ -95,6 +95,7 @@ private:
     std::vector<attribute_t*>* m_attributes;
     uint8_t m_padding;
     std::vector<uint8_t>* m_padbytes;
+    uint32_t m_datasize;
     std::string m_data;
     awdbuf_t* m__root;
     kaitai::kstruct* m__parent;
@@ -104,9 +105,12 @@ public:
     std::vector<attribute_t*>* attributes() const { return m_attributes; }
     uint8_t padding() const { return m_padding; }
     std::vector<uint8_t>* padbytes() const { return m_padbytes; }
+    uint32_t datasize() const { return m_datasize; }
     std::string data() const { return m_data; }
     awdbuf_t* _root() const { return m__root; }
     kaitai::kstruct* _parent() const { return m__parent; }
 };
 
 #endif  // AWDBUF_H_
+
+

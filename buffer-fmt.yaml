@@ -1,0 +1,50 @@
+
+meta:
+  id: awdbuf
+  file-extension: bin
+  endian: le
+
+seq:
+  - id: header
+    type: header
+  - id: attributes
+    type: attribute
+    repeat: expr
+    repeat-expr: header.num_attribs
+  - id: padding
+    type: u1
+  - id: padbytes
+    type: u1
+    repeat: expr
+    repeat-expr: padding
+  - id: data
+    size-eos: true
+
+types:
+  
+  header:
+    seq:
+      - id: num_attribs
+        type: u1
+      - id: gl_type
+        type: u2
+
+  attribute:
+    seq:
+      - id: name
+        type: awdstring
+      - id: bytesize
+        type: u1
+      - id: gltype
+        type : u2
+      - id: flags
+        type : u1
+
+  awdstring:
+    seq:
+      - id: len
+        type: u2
+      - id: value
+        type: str
+        encoding: UTF-8
+        size: len

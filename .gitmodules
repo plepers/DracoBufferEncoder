@@ -1,0 +1,6 @@
+[submodule "submodules/draco"]
+	path = submodules/draco
+	url = git@github.com:google/draco.git
+[submodule "submodules/tclap"]
+	path = submodules/tclap
+	url = git@github.com:plepers/tclap.git

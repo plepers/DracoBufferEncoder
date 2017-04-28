@@ -1,0 +1,4 @@
+// the configured options and settings for Tutorial
+#define DracoBufferEncoder_VERSION_MAJOR @DracoBufferEncoder_VERSION_MAJOR@
+#define DracoBufferEncoder_VERSION_MINOR @DracoBufferEncoder_VERSION_MINOR@
+#define DracoBufferEncoder_VERSION_STR "@DracoBufferEncoder_VERSION_MAJOR@.@DracoBufferEncoder_VERSION_MINOR@"

@@ -52,6 +52,9 @@ compression_level(7) {}
 
 
 
+const bool __verbose = 0;
+
+
 void PrintOptions(const draco::PointCloud &pc, const Options &options) {
     printf("Encoder options:\n");
     printf("  Compression level = %d\n", options.compression_level);
@@ -84,9 +87,9 @@ void PrintOptions(const draco::PointCloud &pc, const Options &options) {
 
 
 
-int EncodePointCloudToFile(const draco::PointCloud &pc,
-                           const draco::EncoderOptions &options,
-                           const std::string &file) {
+int EncodePointCloud(const draco::PointCloud &pc,
+                     const draco::EncoderOptions &options,
+                     std::ostream* out_file) {
     draco::CycleTimer timer;
     // Encode the geometry.
     draco::EncoderBuffer buffer;
@@ -96,18 +99,18 @@ int EncodePointCloudToFile(const draco::PointCloud &pc,
         return -1;
     }
     timer.Stop();
-    // Save the encoded geometry into a file.
-    std::ofstream out_file(file, std::ios::binary);
-    if (!out_file) {
-        printf("Failed to create the output file.\n");
-        return -1;
-    }
-    out_file.write(buffer.data(), buffer.size());
-    printf("Encoded point cloud saved to %s (%" PRId64 " ms to encode)\n",
-           file.c_str(), timer.GetInMs());
-    printf("\nEncoded size = %zu bytes\n\n", buffer.size());
+    
+    if( __verbose ) printf("\nEncoded size = %zu bytes\n\n", buffer.size());
+    
+    if( out_file== NULL )
+        std::cout.write(buffer.data(), buffer.size());
+    else
+        out_file->write(buffer.data(), buffer.size());
+    
     return 0;
 }
+
+
 
 
 
@@ -195,7 +198,7 @@ int main(int argc, char** argv)
         stream = new kaitai::kstream(&std::cin);
         bufferStruct = new awdbuf_t( stream );
     } else {
-        printf("input file \n");
+        if( __verbose ) printf("input file \n");
         std::ifstream file(options.input, std::ios::binary);
         stream = new kaitai::kstream(&file);
         bufferStruct = new awdbuf_t( stream );
@@ -206,7 +209,7 @@ int main(int argc, char** argv)
     
     
     
-    printf("data size %lu \n", bufferStruct->data().size() );
+    if( __verbose ) printf("data size %lu \n", bufferStruct->data().size() );
     
     
     
@@ -224,8 +227,8 @@ int main(int argc, char** argv)
     uint numverts = bufferStruct->data().size()/stride;
     
     
-    printf("num verts %i \n", numverts );
-    printf("stride    %i \n", stride );
+    if( __verbose ) printf("num verts %i \n", numverts );
+    if( __verbose ) printf("stride    %i \n", stride );
     
     
     draco::PointCloudBuilder builder;
@@ -300,19 +303,32 @@ int main(int argc, char** argv)
     const int speed = 10 - options.compression_level;
     draco::SetSpeedOptions(&encoder_options, speed, speed);
     
-    if (options.output.empty()) {
-        // Create a default output file by attaching .drc to the input file name.
-        options.output = options.input + ".drc";
+
+    
+    
+    if( __verbose ) PrintOptions(*pc.get(), options);
+    
+    int ret = -1;
+    
+    
+    
+    if( options.output.empty() ){
+
+        ret = EncodePointCloud(*pc.get(), encoder_options, NULL );
+    } else {
+        std::ofstream* out_file = new std::ofstream(options.output, std::ios::binary);
+        if (!out_file) {
+            if( __verbose ) printf("Failed to create the output file.\n");
+            return -1;
+        }
+        ret = EncodePointCloud(*pc.get(), encoder_options, out_file);
     }
     
     
-    PrintOptions(*pc.get(), options);
     
-    int ret = -1;
-    ret = EncodePointCloudToFile(*pc.get(), encoder_options, options.output);
     
     if (ret != -1 && options.compression_level < 10) {
-        printf(
+        if( __verbose ) printf(
                "For better compression, increase the compression level '-cl' (up to "
                "10).\n\n");
     }

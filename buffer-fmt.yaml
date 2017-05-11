@@ -41,6 +41,12 @@ types:
         type : u2
       - id: flags
         type : u1
+        
+    instances:
+      numcomps:
+        value: (flags & 7)
+      normalize:
+        value: ((flags >> 3) & 1) != 0
 
   awdstring:
     seq:

@@ -198,19 +198,18 @@ int main(int argc, char** argv)
         stream = new kaitai::kstream(&std::cin);
         bufferStruct = new awdbuf_t( stream );
     } else {
-        if( __verbose ) printf("input file \n");
+        
         std::ifstream file(options.input, std::ios::binary);
         stream = new kaitai::kstream(&file);
         bufferStruct = new awdbuf_t( stream );
     }
     
     
+    
+    char* vdata = (char*) malloc( bufferStruct->data().size() );
+    memcpy( vdata, bufferStruct->data().data(), bufferStruct->data().size() );
+    
 
-    
-    
-    
-    if( __verbose ) printf("data size %lu \n", bufferStruct->data().size() );
-    
     
     
     std::vector<awdbuf_t::attribute_t*> attribs = *bufferStruct->attributes();
@@ -219,10 +218,8 @@ int main(int argc, char** argv)
     for (int i=0; i < attribs.size(); i++) {
         awdbuf_t::attribute_t* attrib = attribs[i];
         stride += attrib->bytesize();
-        
-        //uint8_t numComps = attrib->flags() & 7;
-        //attrib->name()
     }
+    
     
     uint numverts = bufferStruct->data().size()/stride;
     
@@ -235,11 +232,6 @@ int main(int argc, char** argv)
     // Initialize the builder for a given number of points (required).
     builder.Start(numverts);
     
-    char* vdata = &bufferStruct->data()[0];
-    
-    
-    
-    
     
     
     // Setup encoder options.
@@ -249,13 +241,14 @@ int main(int argc, char** argv)
     
     // Specify desired attributes.
     
-    int offset = 0;
+    char* attribPtr = vdata;
+    
     for (int i=0; i < attribs.size(); i++) {
         awdbuf_t::attribute_t* attrib = attribs[i];
         
         uint8_t numComps = attrib->flags() & 7;
         
-        //printf("num comps    %i, %i \n", numComps, attrib->bytesize() );
+        if( __verbose ) printf("num comps    %i, %i \n", numComps, attrib->bytesize() );
         
         std::string name = attrib->name()->value();
         
@@ -283,14 +276,16 @@ int main(int argc, char** argv)
         int att_id =
             builder.AddAttribute(type, numComps, draco::DT_FLOAT32);
         
-        builder.SetAttributeValuesForAllPoints( att_id, &vdata[offset], stride );
+        builder.SetAttributeValuesForAllPoints( att_id, attribPtr, stride );
         
         if( quantization_bits > 0 )
             encoder_options.GetAttributeOptions( att_id )->SetInt("quantization_bits", quantization_bits);
         
-        offset += attrib->bytesize();
+        attribPtr += attrib->bytesize();
     }
     
+    
+    free( vdata );
     
     // Get the final PointCloud.
     constexpr bool deduplicate_points = false;
@@ -335,9 +330,5 @@ int main(int argc, char** argv)
     
     return ret;
     
-    
-
-    
-    return 0;
 }
 
